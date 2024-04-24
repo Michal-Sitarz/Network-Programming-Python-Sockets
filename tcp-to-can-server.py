@@ -37,16 +37,25 @@ def send_text(sending_socket, text):
     data = text.encode() # standard UTF-8 (each char into byte)
     sending_socket.send(data)
 
+def get_can_data(message):
+    if(len(message) > 8):
+        message = message[:8]
+    encoded_for_can = message.encode('ascii')
+    can_data = bytearray(encoded_for_can)
+    return can_data
+
 try:
     while True:
         ## Rx (TCP)
         data = client_socket.recv(1024)
-        message_received = data.decode()
-        print(">> Message received: ", message_received)
+        message_decoded = data.decode()
+        print(">> Message received: ", message_decoded)
 
         # Tx (CAN)
         print("Sending CAN message...")
-        can_msg = can.Message(arbitration_id=0x123, data=[0,1,2,3,4,5,6,7], is_extended_id=False)
+        can_data = get_can_data(message_decoded)
+        can_msg = can.Message(arbitration_id=0x123, data=can_data, is_extended_id=False)
+        #can_msg = can.Message(arbitration_id=0x123, data=[0,1,2,3,4,5,6,7,8,9], is_extended_id=False)
         can0.send(can_msg)
         print("CAN message sent.")
 
